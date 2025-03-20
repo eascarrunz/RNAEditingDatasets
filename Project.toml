@@ -1,4 +1,5 @@
-version="0.1"
+version = "0.1.0"
+
 [deps]
 ArgParse = "c7e460c6-2fb9-53a9-8c5b-16f535851c63"
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
@@ -12,9 +13,6 @@ FASTX = "c2308a5c-f048-11e8-3e8a-31650f418d12"
 GFF3 = "af1dc308-cb6b-11e8-32f0-31192efa90f6"
 GZip = "92fee26a-97fe-5a0c-ad85-20a5f3185b63"
 GenomicFeatures = "899a7d2d-5c61-547b-bef9-6698a8d05446"
-IJulia = "7073ff75-c697-5162-941a-fcdaad2a7d2a"
-Interact = "c601a237-2ae4-5e1e-952c-7a85b0c7eef1"
-Pluto = "c3e4b0f8-55cb-11ea-2926-15256bba5781"
 ProgressMeter = "92933f4c-e287-5a05-a399-4b506db050ca"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"

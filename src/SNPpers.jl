@@ -1,6 +1,6 @@
 using Pkg
 Pkg.activate(".")
-Pkg.instantiate()
+# Pkg.instantiate()
 
 using FASTX
 using CodecZlib
@@ -237,8 +237,8 @@ function simulate_genome_and_transcriptome(ctx::SimulationContext, record, p_sha
                write_changes(ctx, nt_ref, id, pos)
             end
 
-            next!(progmeter)
         end
+        next!(progmeter)
     end
 
     # Add final new line to the fasta files
