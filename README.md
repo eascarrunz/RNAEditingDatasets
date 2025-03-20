@@ -5,7 +5,7 @@ This is a repository for downloading and simulating sequence datasets for studyi
 0. Create and activate Conda environment.
 
 ```sh
-conda create env -f environment.yml
+conda env create -f environment.yml
 conda activate RNAEditingDatasets
 ```
 
