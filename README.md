@@ -2,11 +2,12 @@
 
 This is a repository for downloading and simulating sequence datasets for studying RNA editing.
 
-0. Create and activate Conda environment.
+0. Create and activate Conda environment and install InSilicoSeq.
 
 ```sh
 conda env create -f environment.yml
 conda activate RNAEditingDatasets
+pip install -r requirements.txt
 ```
 
 1. Download sequences and annotations of *Homo sapiens* chromosomes 21 and 22.
