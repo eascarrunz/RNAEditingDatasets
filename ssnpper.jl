@@ -243,14 +243,14 @@ function simulate_genome_and_transcriptome(ctx::SimulationContext, record, p_sha
             end
 
             # Write bases to fasta files
-            fasta_line_position = write_states_to_fasta(ctx, fasta_line_position)
-
+            
             # If there was any mutation, record it in the changes file
             if any(≠(nt_ref), ctx.dna_state) || any(≠(nt_ref), ctx.rna_state)
-               write_changes(ctx, nt_ref, id, pos)
+                write_changes(ctx, nt_ref, id, pos)
             end
-
+            
         end
+        fasta_line_position = write_states_to_fasta(ctx, fasta_line_position)
         next!(progmeter)
     end
 
