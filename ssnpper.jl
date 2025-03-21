@@ -1,6 +1,7 @@
-using Pkg
-Pkg.activate(".")
-# Pkg.instantiate()
+if (Base.active_project() |> splitdir |> first) != @__DIR__
+    using Pkg
+    Pkg.activate(@__DIR__)
+end
 
 using FASTX
 using CodecZlib
@@ -23,8 +24,20 @@ This function uses a perfect hash, but it does not check for invalid (ambiguous)
 @inline dna_hash(nt::DNA) = trailing_zeros(reinterpret(UInt8, nt)) + 1
 
 function parse_cli_input(input=ARGS)
+    desc = """
+    ssnpper (/snɪ́pə/): Simulation of SNPs Plus Editions of RNA
+    ==========================================================
+
+    This script takes in sequences from a reference genome and generates a new genome with point mutations (SNP) and a transcriptome with RNA editions.
+    The corresponding output files are tagged "genome" and "transcriptome".
+
+    By default, the script simulates a diploid genome and transcriptome from an unphased reference genome. Output files for each simulated haplotype are tagged "hap" with an ID number.
+    The ploidy can be adjusted with the `--ploidy` option; the ploidy should be set to 1 for simulations on phased reference genomes.
+
+    SNPs are simulated only with the JC96 model, and only A-to-I RNA editions are implemented.
+    """
     s = ArgParseSettings(;
-        description="SNPpers: SNP Plus Edition of RNA Simulation",
+        description=desc,
         version=@project_version
     )
 
@@ -269,7 +282,7 @@ function main()
     
     outdir = invals["outdir"]
     if ! isempty(outdir) && ! isdir(outdir)
-        @warn "output path $(outdir) does not exist. It will be created."
+        @info "output path $(outdir) does not exist. It will be created."
         mkpath(outdir)
     end
 
