@@ -69,9 +69,17 @@ julia ssnpper.jl -z -o data/simulated data/reference/Homo_sapiens/chr21.fasta.gz
 
 3. Simulate RNAseq reads.
 
+A Python script is provided for running InSilicoSeq on the simulated genome and transcriptome and combining the reads.
+
 ```sh
-# Coming soon...
+READSDIR=data/simulated/reads
+
+python src/simulate_rnaediting_reads.py -u data/simulated/chr21_gen* -e data/simulated/chr21_trans* -t "chr21" -n 4_000_000 -p 0.5 -o ${READSDIR} -j 6
+rm ${READSDIR}/*.vcf
+rm ${READSDIR}/*abundance.txt
 ```
+
+The end result is saved to the files data/simulated/reads/chr21_R1.fastq.gzip and data/simulated/reads/chr21_R2.fastq.gzip
 
 ---
 
