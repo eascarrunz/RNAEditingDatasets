@@ -32,7 +32,7 @@ def iss_generate(
         n_reads: int,
         seed: int,
         cpus: int
-        ) -> pathlib.Path:
+        ) -> None:
     """
     Call InSilicoSeq to perform read simulations.
     """
@@ -58,6 +58,8 @@ def iss_generate(
     
     subprocess.run(iss_command)
 
+    return None
+
 
 def add_label_to_identifier(identifier: str, label: str) -> str:
     """
@@ -82,26 +84,20 @@ def combine_reads(reads_dir: pathlib.Path, tag: str) -> None:
     output_postfix: str = ".fastq.gzip"
 
     for rtag in ["R1", "R2"]:
-        edited_input_file_list = reads_dir.glob(f"*_edited_{rtag}.fastq")
-        unedited_input_file_list = reads_dir.glob(f"*_unedited_{rtag}.fastq")
-
         with gzip.open(output_prefix + rtag + output_postfix, "wt") as outstream:
-            for input_file in unedited_input_file_list:
-                with open(input_file) as instream:
-                    for i, line in enumerate(instream):
-                        if i % 4 == 0:
-                            assert line[0] == '@'
-                            outstream.write(add_label_to_identifier(line, "unedited"))
-                        else:
-                            outstream.write(line)
-            for input_file in edited_input_file_list:
-                with open(input_file) as instream:
-                    for i, line in enumerate(instream):
-                        if i % 4 == 0:
-                            assert line[0] == '@'
-                            outstream.write(add_label_to_identifier(line, "edited"))
-                        else:
-                            outstream.write(line)
+            for rna_type in ["unedited", "edited"]:
+                input_file_list = reads_dir.glob(f"*_{rna_type}_{rtag}.fastq")
+
+                for input_file in input_file_list:
+                    with open(input_file) as instream:
+                        for i, line in enumerate(instream):
+                            if i % 4 == 0:
+                                assert line[0] == '@'
+                                outstream.write(add_label_to_identifier(line, rna_type))
+                            else:
+                                outstream.write(line)
+
+    return None
 
 
 if __name__ == "__main__":
