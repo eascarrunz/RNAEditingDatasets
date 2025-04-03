@@ -1,10 +1,27 @@
 #!/usr/bin/env python
 
+""" A wrapper script for simulating RNA editing datasets with InSilicoSeq """
+
 import subprocess
 import pathlib
 import os
 import argparse
 import gzip
+from Bio import SeqIO
+
+L: int = 150    # Read length under the NovaSeq model assumed in the InSilicoSeq simulations
+
+
+def fasta_length(file: str) -> int:
+    """
+    Obtain the total length of all the records in a FASTA file
+    """
+    G: int = 0
+
+    for record in SeqIO.parse(file, "fasta"):
+        G += len(record)
+
+    return G
 
 
 def iss_generate(
@@ -58,6 +75,9 @@ def add_label_to_identifier(identifier: str, label: str) -> str:
 
 
 def combine_reads(reads_dir: pathlib.Path, tag: str) -> None:
+    """
+    Combine the unedited and edited reads (R1 and R2) from InSilicoSeq simulations into a single compressed FASTQ file.
+    """
     output_prefix: str = str(reads_dir) + '/' + tag + '_'
     output_postfix: str = ".fastq.gzip"
 
@@ -70,8 +90,7 @@ def combine_reads(reads_dir: pathlib.Path, tag: str) -> None:
                 with open(input_file) as instream:
                     for i, line in enumerate(instream):
                         if i % 4 == 0:
-                            if line[0] != '@':
-                                print(line)
+                            assert line[0] == '@'
                             outstream.write(add_label_to_identifier(line, "unedited"))
                         else:
                             outstream.write(line)
@@ -92,7 +111,7 @@ if __name__ == "__main__":
     parser.add_argument("-u", "--useq", nargs='+', help="FASTQ files with unedited sequences", required=True)
     parser.add_argument("-e", "--eseq", nargs='+', help="FASTQ files with edited sequences", required=True)
     parser.add_argument("-t", "--tag", type=str, default="")
-    parser.add_argument("-n", "--n_reads", type=int, help="Number of edited reads", required=True)
+    parser.add_argument("-c", "--coverage", type=int, default=100, help="Desired coverage \"times x\" (default=100)")
     parser.add_argument("-p", "--p_edited_reads", type=float, help="Proportion of edited reads", required=True)
     parser.add_argument("-o", "--output_dir", type=str, default=str(pathlib.Path(os.getcwd())), help="Output directory")
     parser.add_argument("-j", "--threads", type=int, default=1, help="Number of threads to use in InSilicoSeq (default=1)")
@@ -100,13 +119,22 @@ if __name__ == "__main__":
 
     args: argparse.Namespace = parser.parse_args()
 
-    n_edited_reads: int = int(round(args.p_edited_reads * args.n_reads))
-    n_unedited_reads: int = args.n_reads - n_edited_reads
-    output_dir: pathlib.Path = pathlib.Path(args.output_dir)
+    # Compute "genome" length G from the median total length of all the input sequence files
+    G_list = [fasta_length(file) for file in args.useq]
+    G_list += [fasta_length(file) for file in args.eseq]
+    G_list.sort()
+    G = G_list[len(G_list) // 2]
 
+    # Compute number of reads N based on the desired coverage
+    N = int(round(args.coverage * G / L))
+    N_edited = int(round(args.p_edited_reads * N))
+    N_unedited = N  - N_edited
+
+    # Set up output dir
+    output_dir: pathlib.Path = pathlib.Path(args.output_dir)
     os.makedirs(args.output_dir, exist_ok=True)
 
-    iss_generate(args.useq, output_dir, "unedited", args.tag, n_unedited_reads, args.seed, args.threads)
-    iss_generate(args.eseq, output_dir, "edited", args.tag, n_edited_reads, args.seed + 1, args.threads)
-    
+    # Simulate and combine
+    iss_generate(args.useq, output_dir, "unedited", args.tag, N_unedited, args.seed, args.threads)
+    iss_generate(args.eseq, output_dir, "edited", args.tag, N_edited, args.seed + 1, args.threads)
     combine_reads(output_dir, args.tag)
