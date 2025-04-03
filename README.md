@@ -50,36 +50,51 @@ docker run -v .:/work -it ssnpper
 Within the Docker container, use the `ssnpper` alias to run the script instead of a Julia command. For example:
 
 ```sh
-ssnpper -z -o data/simulated data/reference/Homo_sapiens/chr21.fasta.gz
+ssnpper -z -o data/simulated data/reference/Homo_sapiens/chr21_small.fasta.gz
 ```
 
-### Usage
+### Creating small example files from human chromosome 21
 
-1. Download sequences and annotations of *Homo sapiens* chromosomes 21 and 22.
+0. Set up the Julia script (see above) and install Python dependencies from requirements.txt
+
+1. Download and unzip sequences and annotations of *Homo sapiens* chromosomes 21.
 
 ```sh
-sh src/download.sh
+mkdir -p data/reference/Homo_sapiens
+
+curl https://ftp.ensembl.org/pub/release-113/fasta/homo_sapiens/dna/Homo_sapiens.GRCh38.dna.chromosome.21.fa.gz -o data/reference/Homo_sapiens/chr21.fasta.gz
+gunzip data/reference/Homo_sapiens/chr21.fasta.gz
+
+curl https://ftp.ensembl.org/pub/release-113/gff3/homo_sapiens/Homo_sapiens.GRCh38.113.chromosome.21.gff3.gz -o data/reference/Homo_sapiens/chr21.gff3.gz
+gunzip data/reference/Homo_sapiens/chr21.gff3.gz
 ```
 
-2. Simulate a diploid genome and transcriptome with SNPs and A-to-I transcript editions.
+1. Create a "small" files from the original data.
 
 ```sh
-julia ssnpper.jl -z -o data/simulated data/reference/Homo_sapiens/chr21.fasta.gz
+python src/make_small.py
 ```
 
-3. Simulate RNAseq reads.
+3. Simulate a diploid genome and transcriptome with SNPs and A-to-I transcript editions, and unzip the output files
+
+```sh
+julia ssnpper.jl -z -o data/simulated data/reference/Homo_sapiens/chr21_small.fasta
+gunzip data/simulated/chr21*.gz
+```
+
+4. Simulate RNAseq reads.
 
 A Python script is provided for running InSilicoSeq on the simulated genome and transcriptome and combining the reads. The `-c` option is used to set a coverage of 100x, and the `-p` option sets the proportion of RNA-edited reads.
 
 ```sh
 READSDIR=data/simulated/reads
 
-python src/simulate_rnaediting_reads.py -u data/simulated/chr21_gen* -e data/simulated/chr21_trans* -t "chr21" -c 100 -p 0.5 -o ${READSDIR} -j 6
+python src/simulate_rnaediting_reads.py -u data/simulated/chr21_small_gen* -e data/simulated/chr21_small_trans* -t "chr21_small" -c 100 -p 0.5 -o ${READSDIR} -j 6
 rm ${READSDIR}/*.vcf
 rm ${READSDIR}/*abundance.txt
 ```
 
-The end result is saved to the files data/simulated/reads/chr21_R1.fastq.gzip and data/simulated/reads/chr21_R2.fastq.gzip
+The end result is saved to the files data/simulated/reads/chr21_R1.fastq.gz and data/simulated/reads/chr21_R2.fastq.gz
 
 ---
 

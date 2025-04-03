@@ -17,7 +17,6 @@ def fasta_length(file: str) -> int:
     Obtain the total length of all the records in a FASTA file
     """
     G: int = 0
-
     for record in SeqIO.parse(file, "fasta"):
         G += len(record)
 
@@ -55,6 +54,7 @@ def iss_generate(
     # Misc
     iss_command += ["--seed", str(seed)]
     iss_command += ["--cpus", str(cpus)]
+    iss_command.append("--compress")
     
     subprocess.run(iss_command)
 
@@ -78,18 +78,17 @@ def add_label_to_identifier(identifier: str, label: str) -> str:
 
 def combine_reads(reads_dir: pathlib.Path, tag: str) -> None:
     """
-    Combine the unedited and edited reads (R1 and R2) from InSilicoSeq simulations into a single compressed FASTQ file.
+    Combine the unedited and edited reads (R1 and R2) from InSilicoSeq simulations into a single is_compressed FASTQ file.
     """
     output_prefix: str = str(reads_dir) + '/' + tag + '_'
-    output_postfix: str = ".fastq.gzip"
+    output_postfix: str = ".fastq.gz"
 
     for rtag in ["R1", "R2"]:
         with gzip.open(output_prefix + rtag + output_postfix, "wt") as outstream:
             for rna_type in ["unedited", "edited"]:
-                input_file_list = reads_dir.glob(f"*_{rna_type}_{rtag}.fastq")
-
+                input_file_list = reads_dir.glob(f"*_{rna_type}_{rtag}.fastq.gz")
                 for input_file in input_file_list:
-                    with open(input_file) as instream:
+                    with gzip.open(input_file, "rt") as instream:
                         for i, line in enumerate(instream):
                             if i % 4 == 0:
                                 assert line[0] == '@'
@@ -104,8 +103,8 @@ if __name__ == "__main__":
     parser: argparse.ArgumentParser = argparse.ArgumentParser(
         description="Run InSilicoSeq on a set of edited and unedited transcriptome sequence files"
     )
-    parser.add_argument("-u", "--useq", nargs='+', help="FASTQ files with unedited sequences", required=True)
-    parser.add_argument("-e", "--eseq", nargs='+', help="FASTQ files with edited sequences", required=True)
+    parser.add_argument("-u", "--useq", nargs='+', help="FASTA files with unedited sequences", required=True)
+    parser.add_argument("-e", "--eseq", nargs='+', help="FASTA files with edited sequences", required=True)
     parser.add_argument("-t", "--tag", type=str, default="")
     parser.add_argument("-c", "--coverage", type=int, default=100, help="Desired coverage \"times x\" (default=100)")
     parser.add_argument("-p", "--p_edited_reads", type=float, help="Proportion of edited reads", required=True)
